@@ -2,7 +2,6 @@
 package com.loltournament.loginservice.controller;
 
 import com.loltournament.loginservice.model.Player;
-import com.loltournament.loginservice.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +16,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.springframework.http.HttpStatus;  // Ensure this import is present
+import org.springframework.http.HttpStatus;
 
+/**
+ * For the tests to work, change the register credentials each time 
+ * (i know this is super scuffed, i made this at 4am on the day of presentation)
+ * 
+ * To fix the above issue:
+ * Should mock the database, then use AfterEach to delete the row from the mocked database
+ * Right now this is using the actual database !!!
+ * 
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AuthControllerIntegrationTest {
 

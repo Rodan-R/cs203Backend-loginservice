@@ -19,6 +19,10 @@ import java.io.IOException;
 
 import org.springframework.lang.NonNull;
 
+/**
+ * Used for JWT authentication
+ * I copied from your code
+ */
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
@@ -39,13 +43,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String username = null;
         String jwt = null;
 
-        // Extract the JWT token from the Authorization header
+        // To extract the JWT token from the Authorization header
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);  // Remove "Bearer " prefix
             username = jwtUtil.extractUsername(jwt);
         }
 
-        // Validate the JWT and set the user in the security context
+        // This validates the JWT and sets the user in the security context
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userService.loadUserByUsername(username);
 

@@ -26,6 +26,20 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Should add more tests
+ * 
+ * Missing tests:
+ * EmailAlreadyExists
+ * UsernameAlreadyExists
+ * PlayernameAlreadyExists
+ * NullUsername
+ * NullPassword
+ * NullEmail
+ * NullPlayername
+ * 
+ * And others that you can think of
+ */
 @SpringBootTest
 @AutoConfigureMockMvc // To enable MockMvc for testing
 public class AuthControllerTest {

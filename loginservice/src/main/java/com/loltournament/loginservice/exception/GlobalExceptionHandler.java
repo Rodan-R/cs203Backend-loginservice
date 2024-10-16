@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
-    // Handle UserNotFoundException
+    // Handle UserNotFoundException (Not used)
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<?> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
         Map<String, String> response = new HashMap<>();

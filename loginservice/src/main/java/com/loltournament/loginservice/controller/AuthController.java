@@ -5,7 +5,7 @@ import com.loltournament.loginservice.security.SecurityConfig;
 import com.loltournament.loginservice.util.JwtUtil;
 import com.loltournament.loginservice.service.PlayerService;
 // import com.loltournament.loginservice.exception.UserNotFoundException;
-import com.loltournament.loginservice.exception.InvalidCredentialsException;
+// import com.loltournament.loginservice.exception.InvalidCredentialsException;
 
 import org.apache.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +25,15 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * AuthController handles authentication-related operations such as user registration and login.
+ * It uses Spring Security for authentication and JWT for token generation.
+ */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/auth") // Base URL for all endpoints in this controller
 public class AuthController {
 
-    // Initialize logger
+    // Logger for this class
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     
     @Autowired
@@ -42,30 +46,31 @@ public class AuthController {
     private PlayerService userService;
 
     /**
-     * Register a new user with LOCAL authentication provider.
-     * Player submits their username, password, email, and playername.
+     * Endpoint to register a new user with LOCAL authentication provider.
+     * The user submits their username, password, email, and playername.
+     * 
+     * @param user Player object containing registration information
+     * @return ResponseEntity with a message indicating success or failure
      */
     @PostMapping(value = "/register")
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody Player user) {
         try {
-            // The 'user' object should contain the 'playername' value from the request body.
-            System.out.println("Player Name: " + user.getPlayername());
-            if (user.getPlayername() == null || user.getPlayername().isEmpty()) {
-                throw new IllegalArgumentException("Playername cannot be null or empty");
-            }
-
-            // Password encoding and saving the user
+            // Encode the password before saving the user
             user.setPassword(new SecurityConfig().passwordEncoder().encode(user.getPassword()));
-            userService.saveUser(user);
+            userService.saveUser(user); // Save the user to the database
 
-            // Create a success response with a structured JSON object
+            // Prepare a success response
             Map<String, Object> responseBody = new HashMap<>();
             responseBody.put("message", "User registered successfully!");
 
             return new ResponseEntity<>(responseBody, HttpStatus.OK);
+
+            // MISSING:
+            // Should add exceptions for if email/username is already taken
         } catch (Exception e) {
             e.printStackTrace();
-            // Create an error response in case of an exception
+            
+            // Prepare an error response
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("message", "Error registering user");
             errorResponse.put("error", e.getMessage());
@@ -74,33 +79,44 @@ public class AuthController {
         }
     }
 
+    /**
+     * Endpoint to log in an existing user.
+     * 
+     * @param user Player object containing login information
+     * @return ResponseEntity with the JWT token if login is successful
+     */
     @PostMapping(value = "/login")
     public ResponseEntity<Map<String, Object>> loginUser(@RequestBody Player user) {
         try {
+            // Authenticate the user
             authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
+            // Load user details after successful authentication
             UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
             if (userDetails == null) {
                 throw new RuntimeException("Invalid username or password");
             }
+            // Generate JWT token for the authenticated user
             String jwt = jwtUtil.generateToken(userDetails.getUsername());
 
-            // Return a structured JSON response with the JWT token
+            // Prepare a structured JSON response with the JWT token
             Map<String, Object> responseBody = new HashMap<>();
             responseBody.put("jwt", jwt);
 
+            // Put JWT token in body and also in the Authorization header
+            // Can remove from Authorization header if you want to
             return ResponseEntity.ok()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt) // Set the Authorization header
                 .body(responseBody);
         } catch (BadCredentialsException ex) {
             logger.error("Invalid credentials for user: {}", user.getUsername(), ex);
 
-            // Return 401 Unauthorized with error message
+            // Prepare an error response
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("message", "Invalid username or password");
 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse); // Return 401 Unauthorized
         } catch (Exception ex) {
             logger.error("An error occurred during login: {}", ex.getMessage(), ex);
             throw new RuntimeException("An error occurred during login", ex);

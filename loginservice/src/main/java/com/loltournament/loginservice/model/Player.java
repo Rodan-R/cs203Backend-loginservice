@@ -14,6 +14,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * I commented out the authProvider
+ */ 
 @Entity
 @Table(name = "players")
 public class Player implements UserDetails {
@@ -22,9 +25,6 @@ public class Player implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
-
-    // @Column(name = "auth_provider")
-    // private String authProvider;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;

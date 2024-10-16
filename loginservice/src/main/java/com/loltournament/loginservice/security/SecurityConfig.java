@@ -17,6 +17,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.loltournament.loginservice.filter.JwtRequestFilter;
 
+/**
+ * I removed the googleAuth parts
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -27,9 +30,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())  // Disable CSRF protection for simplicity in API usage
+            .csrf(csrf -> csrf.disable())  // Disabled CSRF protection
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()  // Allow access to authentication endpoints (JWT)
+                .requestMatchers("/auth/**").permitAll()  // Allow access to authentication endpoints (Login + Register)
                 .anyRequest().authenticated()  // Require authentication for all other requests
             )
             .sessionManagement(session -> session
@@ -52,6 +55,8 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // For frontend, currently using localhost
+    // Should change if Frontend is deployed on a server
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
