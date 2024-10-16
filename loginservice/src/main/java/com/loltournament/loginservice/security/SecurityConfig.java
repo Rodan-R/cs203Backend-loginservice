@@ -12,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.loltournament.loginservice.filter.JwtRequestFilter;
 
@@ -28,13 +30,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())  // Disable CSRF protection for simplicity in API usage
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()  // Allow access to authentication endpoints (JWT)
-                .requestMatchers("/oauth2/**").permitAll()  // Allow OAuth2 endpoints
                 .anyRequest().authenticated()  // Require authentication for all other requests
-            )
-            .oauth2Login(oauth2 -> oauth2
-                .loginPage("/oauth2/authorization/google")  // Custom Google OAuth2 login page
-                .defaultSuccessUrl("/auth/oauth2/success", true)  // Redirect after successful OAuth2 login
-                .failureUrl("/auth/login?error=true")  // Redirect in case of OAuth2 login failure
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Make Spring Security stateless
@@ -54,5 +50,19 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")  // Allow CORS for all paths
+                    .allowedOrigins("http://localhost:3000")  // Allow specific origins
+                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  // Allow specific HTTP methods
+                    .allowedHeaders("*")  // Allow all headers
+                    .allowCredentials(true);  // Allow cookies/credentials to be sent
+            }
+        };
     }
 }

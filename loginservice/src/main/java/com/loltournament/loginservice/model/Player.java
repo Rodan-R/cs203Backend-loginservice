@@ -5,35 +5,51 @@ import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+// import jakarta.persistence.EnumType;
+// import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "players")
 public class Player implements UserDetails {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String username;
-    private String password;
+    @Column(name = "user_id")
+    private Long userId;
+
+    // @Column(name = "auth_provider")
+    // private String authProvider;
+
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Enumerated(EnumType.STRING)
-    private AuthProvider authProvider;
+    @Column(name = "password")
+    private String password;
 
-    public enum AuthProvider {
-        LOCAL, GOOGLE
-    }
+    @Column(name = "playername", nullable = false)
+    private String playername;
+
+    @Column(name = "username", nullable = false, unique = true)
+    private String username;
+
+    // @Enumerated(EnumType.STRING)
+    // private AuthProvider authProvider;
+
+    // public enum AuthProvider {
+    //     LOCAL, GOOGLE
+    // }
 
     public Long getId() {
-        return id;
+        return userId;
     }
-    public void setId(Long id) {
-        this.id = id;
+    public void setId(Long userId) {
+        this.userId = userId;
     }
     public String getUsername() {
         return username;
@@ -53,14 +69,21 @@ public class Player implements UserDetails {
     public void setEmail(String email) {
         this.email = email;
     }
+    public String getPlayername() {
+		return playername;
+	}
+	public void setPlayername(String playername) {
+		this.playername = playername;
+	}
+    
 
-    public AuthProvider getAuthProvider() {
-        return authProvider;
-    }
+    // public AuthProvider getAuthProvider() {
+    //     return authProvider;
+    // }
 
-    public void setAuthProvider(AuthProvider authProvider) {
-        this.authProvider = authProvider;
-    }
+    // public void setAuthProvider(AuthProvider authProvider) {
+    //     this.authProvider = authProvider;
+    // }
 
     // Methods required by UserDetails
 
@@ -88,4 +111,10 @@ public class Player implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+	public Long getUserId() {
+		return userId;
+	}
+	public void setUserId(Long userId) {
+		this.userId = userId;
+	}
 }

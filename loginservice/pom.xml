@@ -89,11 +89,6 @@
 
 		<dependency>
 			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-lambda</artifactId>
-			<version>1.12.526</version> <!-- Check the latest version in Maven Central -->
-		</dependency>
-		<dependency>
-			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-core</artifactId>
 			<version>1.12.526</version> <!-- Same version as above -->
 		</dependency>
@@ -138,6 +133,16 @@
 			<groupId>io.github.cdimascio</groupId>
 			<artifactId>java-dotenv</artifactId>
 			<version>5.2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
