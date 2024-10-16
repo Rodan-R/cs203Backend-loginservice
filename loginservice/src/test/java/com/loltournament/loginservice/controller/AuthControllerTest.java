@@ -14,12 +14,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -28,65 +27,64 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc // If you're using MockMvc for testing the controller
+@AutoConfigureMockMvc // To enable MockMvc for testing
 public class AuthControllerTest {
 
     @Mock
-    private PlayerService playerService;
+    private PlayerService playerService; // Mocking PlayerService
 
     @Mock
-    private AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager; // Mocking AuthenticationManager
 
     @Mock
-    private JwtUtil jwtUtil;
+    private JwtUtil jwtUtil; // Mocking JwtUtil for JWT token generation
 
     @InjectMocks
-    private AuthController authController;
+    private AuthController authController; // Inject the mocks into AuthController
 
     @Autowired
-    private MockMvc mockMvc;
+    private MockMvc mockMvc; // MockMvc to perform HTTP requests
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper; // ObjectMapper for JSON processing
 
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this); 
-        mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
+        MockitoAnnotations.openMocks(this); // Initialize the mocks
+        mockMvc = MockMvcBuilders.standaloneSetup(authController).build(); // Setup MockMvc with the controller
     }
 
+    // Test case for successful registration
     @Test
     public void testRegisterUserSuccess() throws Exception {
-        // Mock player data
         Player player = new Player();
         player.setUsername("testuser");
         player.setPassword("testpassword");
         player.setEmail("test@gmail.com");
         player.setPlayername("testplayer");
 
-        Map<String, Object> expectedResponse = new HashMap<>();
-        expectedResponse.put("message", "User registered successfully!");
-
-        // Mock saveUser call
+        // Mock PlayerService saveUser method
         doNothing().when(playerService).saveUser(any(Player.class));
 
-        // Perform POST request
         mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(player)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("User registered successfully!"));
 
-        // Verify interactions
+        // Verify that the saveUser method is called once
         verify(playerService, times(1)).saveUser(any(Player.class));
     }
 
+    // Test case for failed registration
     @Test
     public void testRegisterUserFailure() throws Exception {
         Player player = new Player();
         player.setUsername("testuser");
         player.setPassword("testpassword");
+        player.setPlayername(null); // Ensure playername is null to trigger the failure
 
+        // Simulate an exception being thrown during user registration
         doThrow(new IllegalArgumentException("Playername cannot be null or empty"))
                 .when(playerService).saveUser(any(Player.class));
 
@@ -95,17 +93,25 @@ public class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(player)))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value("Error registering user"));
+
+        // Verify that saveUser was not called because of the validation error
+        verify(playerService, times(0)).saveUser(any(Player.class));
     }
 
+
+    // Test case for successful login
     @Test
     public void testLoginUserSuccess() throws Exception {
         Player player = new Player();
         player.setUsername("testuser");
         player.setPassword("testpassword");
 
-        // Mock JWT generation and authentication
+        // Mock the successful authentication and UserDetails retrieval
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(null); // AuthenticationManager doesn't return anything
+                .thenReturn(null); // Successful authentication
+        UserDetails mockUserDetails = mock(UserDetails.class); // Mocking UserDetails
+        when(mockUserDetails.getUsername()).thenReturn("testuser");
+        when(playerService.loadUserByUsername(anyString())).thenReturn(mockUserDetails); // Mock UserDetails from service
         when(jwtUtil.generateToken(anyString())).thenReturn("fake-jwt-token");
 
         mockMvc.perform(post("/auth/login")
@@ -115,7 +121,9 @@ public class AuthControllerTest {
                 .andExpect(header().string("Authorization", "Bearer fake-jwt-token"))
                 .andExpect(jsonPath("$.jwt").value("fake-jwt-token"));
 
+        // Verify interactions
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(playerService, times(1)).loadUserByUsername(anyString());
         verify(jwtUtil, times(1)).generateToken(anyString());
     }
 
@@ -125,15 +133,17 @@ public class AuthControllerTest {
         player.setUsername("testuser");
         player.setPassword("wrongpassword");
 
+        // Simulate a failed authentication by throwing a BadCredentialsException
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new RuntimeException("Invalid username or password"));
+                .thenThrow(new BadCredentialsException("Invalid username or password"));
 
         mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(player)))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.message").value("An error occurred during login"));
+                .andExpect(status().isUnauthorized()) // Expecting 401 Unauthorized
+                .andExpect(jsonPath("$.message").value("Invalid username or password"));
 
+        // Verify that the authentication was attempted
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
 }

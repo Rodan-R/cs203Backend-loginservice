@@ -81,6 +81,9 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
             UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
+            if (userDetails == null) {
+                throw new RuntimeException("Invalid username or password");
+            }
             String jwt = jwtUtil.generateToken(userDetails.getUsername());
 
             // Return a structured JSON response with the JWT token
@@ -92,7 +95,12 @@ public class AuthController {
                 .body(responseBody);
         } catch (BadCredentialsException ex) {
             logger.error("Invalid credentials for user: {}", user.getUsername(), ex);
-            throw new InvalidCredentialsException("Invalid username or password");
+
+            // Return 401 Unauthorized with error message
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Invalid username or password");
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         } catch (Exception ex) {
             logger.error("An error occurred during login: {}", ex.getMessage(), ex);
             throw new RuntimeException("An error occurred during login", ex);
